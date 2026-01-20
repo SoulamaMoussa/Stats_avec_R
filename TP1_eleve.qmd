@@ -1,7 +1,7 @@
 ---
 title: "TP1 - Statistique avec R"  # Titre du document
 description: "Découverte de Quarto en sortie html"  # Description ou objectif du document
-author: "Moussa SOULAMA"  # Auteur du document, à remplacer par votre nom
+author: "Prénom NOM"  # Auteur du document, à remplacer par votre nom
 format: 
   html:  # Format de sortie du document (ici en HTML)
     embed-resources: true # Incorporer toutes les ressources nécessaires (comme le CSS et les images) directement dans le fichier HTML.
