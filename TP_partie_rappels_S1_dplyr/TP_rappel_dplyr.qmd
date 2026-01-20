@@ -1,0 +1,93 @@
+---
+title: "TP1 - Statistique avec R Rappels dplyr du S1"  
+description: "Découverte de Quarto en sortie html"  # Description ou objectif du document
+author: "Moussa SOULAMA"  # Auteur du document, à remplacer par votre nom
+format: 
+  html:  # Format de sortie du document (ici en HTML)
+    embed-resources: true # Incorporer toutes les ressources nécessaires (comme le CSS et les images) directement dans le fichier HTML.
+
+lang: fr  # Langue du document (ici en français)
+from: markdown+emoji  # Format d'entrée pour le document (markdown avec support des emojis)
+number-sections: true  # Numéroter les sections du document
+lightbox: true  # Activer la fonctionnalité Lightbox pour afficher des images ou autres contenus en plein écran
+---
+
+# Objetifs du TP
+
+Le but de ce TP est de s’assurer que tout le monde est capable de manipuler un jeu de données. C’est aussi l’occasion de revoir la syntaxe pour simuler des lois de probabilités.
+
+## Execrcice 1
+
+### Partie A
+
+#### Descriptif de la base et traitement des données
+
+```{r}
+
+communes_2019 <- read.csv2("communes_2019.csv")
+
+```
+
+```{r}
+str(communes_2019)
+
+
+```
+
+On remarque les types de certaines variables ne sont pas cohérents. Donc nous procedons aux modifications de leurs types
+
+```{r , warning = FALSE}
+#library(dplyr)
+communes <- communes_2019%>%
+  mutate(
+    pop2019 = as.numeric(pop2019),
+    pop0020_2019 = as.numeric(pop0020_2019),
+    pop6475_2019 = as.numeric(pop6475_2019),
+    pop7582019 = as.numeric(pop7582019),
+    typoAAV20 = as.factor(typoAAV20),
+    grilledens7 = factor (grilledens7, levels = 1:7, labels = c("Grands centres urbains","Centres urbains intermédiaires", "Petites villes", "Ceintures urbaines", 
+ "Bourgs ruraux", "Rural à habitat dispersé", "Rural à habitat très dispersé")
+                            ),
+ 
+    tx_evol_annuel_1319 = as.numeric(tx_evol_annuel_1319)
+  )%>%
+  rename(
+    pop75plus_2019 = pop7582019 # Renomer la variable “pop7582019” en “pop75plus_2019”.
+  )
+  
+```
+
+```{r}
+#str(communes)
+summary(communes)
+```
+
+#### 4- Filtrer que les communes de Provence-Alpes d'Azue (PACA)
+
+```{r}
+
+# Extraire les deux premiers caracteres du codego des communes :substr
+
+communes_PACA <- communes%>%
+  mutate(
+    codeogeo_sub_2 = substr(codgeo, 1, 2)
+  )%>%
+  filter(
+    codeogeo_sub_2 %in% c("04", "05", "06", "13", "83", "84") == TRUE
+  )
+```
+
+#### 5 Suppression des doublons
+
+```{r}
+# Verifions s'il y a des doublons
+
+anyDuplicated(communes_PACA) # verifie s'il existe au moins un doublon
+
+# Nombre d'hbts en PACA
+
+communes_PACA%>%
+  summarise(
+    sum(pop2019)
+  )
+```
