@@ -1,0 +1,213 @@
+---
+title: "TP2"  # Titre du document
+description: "Découverte de Quarto en sortie html"  # Description ou objectif du document
+author: "Moussa SOULAMA"  # Auteur du document, à remplacer par votre nom
+format: 
+  html:  # Format de sortie du document (ici en HTML)
+    embed-resources: true # Incorporer toutes les ressources nécessaires (comme le CSS et les images) directement dans le fichier HTML.
+
+lang: fr  # Langue du document (ici en français)
+from: markdown+emoji  # Format d'entrée pour le document (markdown avec support des emojis)
+number-sections: true  # Numéroter les sections du document
+lightbox: true  # Activer la fonctionnalité Lightbox pour afficher des images ou autres contenus en plein écran
+---
+
+# OBJECTIF DU TP
+
+Le but de ce TP est de s’initier au package ggplot2 pour la réalisation de graphiques sous R. Dans ce TP, nous aborderons également la manipulation de dates avec le package lubridate. Le 1er exercice montre un cas de “point levier” en regression. L’exercice 2 est particulièrement important. Il montre quelques exemples de générations de variables aléatoires et illustre un problème important en statistiques : l’erreur écologique.
+
+## Chargement des libraries
+
+```{r}
+
+library(dplyr)
+library(ggplot2)
+library(lubridate)
+#install.packages("plotly")
+library(plotly)
+```
+
+## Exercice 1
+
+```{r}
+data(package="dplyr")
+#data("starwars")
+str(starwars)
+```
+
+```{r}
+
+starwars <- starwars%>%
+  filter(is.na(height)==FALSE,
+         is.na(mass)==FALSE)
+summary(starwars)
+
+# Ou utiliser drop.na pour supprimer les NA
+```
+
+```{r}
+#Q3
+plot(starwars$height, starwars$mass)
+
+
+```
+
+```{r}
+ggplot(data = starwars,
+       aes(x= height,
+           y= mass))+
+  geom_point()
+
+```
+
+```{r}
+#Q6 regression linéaire simple
+
+reg <- lm(mass~height, starwars)
+summary(reg)
+
+# R^2 = 0.01712. Le modele explique que 1% de la variance
+
+```
+
+```{r}
+#Q8 retirer l'observation aberrante
+
+starwars_no_aber <- starwars%>%
+  filter(mass != max(mass))
+ggplot(starwars_no_aber,
+       aes(x=height,
+           y= mass))+
+  geom_point()
+
+reg_Q8 <- lm(data = starwars_no_aber, mass~height)
+
+summary(reg_Q8)
+```
+
+Une fois la valeur aberrante enlvée le modèle s'améliore et explique environ 57% de la variance.
+
+```{r}
+#Q10 La relation mass~height depend de la variable species
+ggplot(starwars_no_aber,
+       aes(x=height,
+           y= mass, color = species))+
+  geom_point()
+
+ggplot(starwars_no_aber,
+       aes(x=height,
+           y= mass, color = birth_year, shape = sex))+
+  geom_point()
+
+```
+
+```{r}
+ggplot(starwars_no_aber,
+       aes(x=height,
+           y= mass, color = sex))+
+  geom_point()+
+  theme_bw()+
+  labs(
+    title = "Nuage des points de la massse en fonction de height",
+    subtitle = "Croisemend des variables poid~taille selon le sexe",
+    x = "Taille",
+    y = "Poids",
+    caption = "Source : starwars"
+  )+
+  theme_minimal()
+```
+
+## Exercice 2
+
+```{r}
+set.seed(2026) # fixer une graine
+
+Education <- rbinom(n = 1000, size =2, prob =0.5)
+
+Y1 <- rnorm(1000, 0, 1)
+Y2 <- rnorm(1000, 0, 1)
+
+Neurociticism <- Education + Y1
+
+Salary <- Education*2 + Y2 - Neurociticism*0.1 
+
+Education <- factor(Education, levels = c("0","1","2"),
+                    labels = c("Low","Medium","High"))
+data_tibble <- dplyr::tibble(Education, Salary,Neurociticism)
+
+ggplot(data = data_tibble,
+       aes(x = Neurociticism, y= Salary))+
+  geom_point()+
+  geom_smooth(method = 'lm')
+  theme_bw()+
+  labs(
+    title = "Nuage de points Salaire en fonction de Neurociticism",
+    x = "Neurociticism",
+    y = "Salaire",
+    caption = "Source : random dataset"
+  )
+
+#Coefficient de correlation
+cor.test(data =data_tibble, Salary, Neurociticism)
+#OU
+cor(data_tibble$Salary,data_tibble$Neurociticism)
+
+#Q5
+ggplot(data = data_tibble,
+       aes(x = Neurociticism, y= Salary, color = Education))+
+  geom_point()+
+  geom_smooth(method = 'lm')
+  theme_bw()+
+  labs(
+    title = "Nuage de points Salaire en fonction de Neurociticism",
+    x = "Neurociticism",
+    y = "Salaire",
+    caption = "Source : random dataset"
+  )
+```
+
+Paradoxe de Simpson.
+
+## Exercice 3
+
+### 1 Tables du packages ggplots
+
+```{r}
+data(package = "ggplot2")
+
+```
+
+### 2 Charger les tables economics et presidentiel
+
+```{r}
+data(c("economics", "presidential"))
+str(economics)
+str(presidential)
+
+```
+
+### 3 Tri de la table economics selon dply
+
+```{r}
+economics1 <- economics%>%
+  arrange(desc(date))
+
+# Q4 Créer une variable annee.
+
+economics1 <- economics1%>%
+  mutate(annee = year(date)) # year() renvoie l'annee d'une date
+
+# Q5 
+economics1 <- economics1%>%
+  group_by(annee)%>%
+  summarise(nb_mois = n())%>%
+  filter(nb_mois!=12)
+
+economics%>%
+  group_by(year(date), month(date))%>%
+  filter(
+    n() >1
+  )
+
+library(fuzzyjoin)
+```
