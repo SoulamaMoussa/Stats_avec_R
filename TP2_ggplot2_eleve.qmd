@@ -313,5 +313,7 @@ Attention pour la valeur du x : cette valeur est un nombre de jours.
   Le package `fuzzyjoin` est un package permettant de faire des jointures malgré des correspondances approximatives.
 
   12. Rajouter l'option `group=1` pour ne pas avoir 2 courbes.
+  
+  
  
  
