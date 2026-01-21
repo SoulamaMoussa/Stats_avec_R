@@ -186,9 +186,10 @@ str(presidential)
 
 ```
 
-### 3 Tri de la table economics selon dply
+### 3 Tri de la table economics selon dplyr
 
 ```{r}
+# Q3 Tri de la base eco selon la variable date dans l'ordre decroiss : arrange
 economics1 <- economics%>%
   arrange(desc(date))
 
@@ -197,17 +198,99 @@ economics1 <- economics%>%
 economics1 <- economics1%>%
   mutate(annee = year(date)) # year() renvoie l'annee d'une date
 
-# Q5 
-economics1 <- economics1%>%
-  group_by(annee)%>%
-  summarise(nb_mois = n())%>%
-  filter(nb_mois!=12)
+# Q5 verifier si toutes les annees sont renseignes?
+# Et afficher les annes ne comportant pas 12 mois
 
+economics1 %>%
+  group_by(annee) %>%
+  summarise(nb_mois = n()) %>%
+  filter(nb_mois != 12)
+
+
+#Q6 
 economics%>%
   group_by(year(date), month(date))%>%
   filter(
     n() >1
   )
 
+#Q7 Nombre de jours entre la date la plus ancienne(min(date)) et la plus recente max(date)
+
+max(economics1$date)-min(economics1$date)
+
+#La date la plus ancienne à juillet 2007 
+#la fonction ymd permet de transformer un chaine de carct en date
+
+ymd("2007-07-01")-min(economics$date)
+
+#Q8 Representer le nbre de chomeurs au cours du temps
+
+ggplot(data= economics1,
+       aes(x= date,
+           y = unemploy))+
+  geom_line()+
+  theme_bw()+
+  labs(
+    title = "Evlolution du nombre de chomeurs au cours du temps",
+    x = "date",
+    y = "Nombre de chomeurs",
+    caption = "Source : Federal Reserve Bank of Saint-Louis"
+  )+
+  geom_point(data = economics1%>%
+               filter(date == "2007-07-01"),
+             colour = "red", pch = 0) +
+  geom_label(
+    data = economics %>% filter(date == "2007-07-01"),
+    aes(label = "Crise des subprimes"),
+    color = "red",
+    #position = position_dodge(0.5)
+  ) # ajout du texte a point precis de la courbe #geom_text()
+
+
+#Q11 
+
 library(fuzzyjoin)
+#fuzzy_left_join() permet :
+#des jointures conditionnelles
+#des comparaisons non exactes
+#des jointures sur intervalles
+
+economics_pres <- economics1 %>%
+  fuzzy_left_join(
+    presidential,
+    by = c("date" = "start", "date" = "end"),#comparaison entre date et les dates de debut et fin du mandant presidentiels
+    match_fun = list(`>=`, `<=`) #permet de verifier si start<= date<=end
+  )
+
+
+#Q12
+
+ggplot(economics_pres,
+       aes(x = date, y = unemploy, group = 1, color = party)) +
+  geom_line(linewidth = 1) +
+  labs(
+    title = "Évolution du nombre de chômeurs et parti au pouvoir",
+    x = "Date",
+    y = "Nombre de chômeurs",
+    color = "Parti",
+    caption = "Source : Federal Reserve Bank of Saint-Louis"
+  )
+
+```
+
+```{r}
+#Q13
+#Faire une modiffication sur plusieurs colones a la fois avec across()
+economics_annuel <- economics_pres %>%
+  mutate(annee = year(date)) %>%
+  group_by(annee) %>%
+  summarise(across(where(is.numeric), mean, na.rm = TRUE))
+
+
+economics_annuel <- economics_annuel %>%
+  arrange(annee) %>%
+  mutate(
+    gr_pce = (pce / lag(pce, 1) - 1) * 100
+  )
+
 ```
